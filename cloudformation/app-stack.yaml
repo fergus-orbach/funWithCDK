@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: stack for meaning finder app
+Parameters:
+  ArtifactBucket:
+    Type: String
+    Description: bucket name for lambda artifacts
+  ArtifactBucketKey:
+    Type: String
+    Description: bucket key for lambda artifacts
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "translate"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - translate:*
+                  - comprehend:*
+                Resource: '*'
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  MeaningFinderLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: MeaningFinder
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Sub "${ArtifactBucketKey}/dist.zip"
+      Runtime: nodejs14.x
+      Timeout: 300

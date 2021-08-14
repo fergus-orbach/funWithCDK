@@ -37,5 +37,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
   const translatedText = await client.send(command)
 
-  return apiResponses.OK(translatedText)
+  return apiResponses.OK({
+    sourceLanguage: translatedText.SourceLanguageCode,
+    targetLanguage: translatedText.TargetLanguageCode,
+    message: translatedText.TranslatedText
+  })
 }
