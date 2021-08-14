@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: stack for deploying lambda artifacts bucket
+Resources:
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: fergios-artifacts-bucket
+
+  ArtifactsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArtifactsBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:  arn:aws:iam::765096330323:root
+            Action:
+              - s3:*
+            Resource: arn:aws:s3:::fergios-artifacts-bucket/*
+
+
