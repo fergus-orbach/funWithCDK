@@ -25,6 +25,7 @@ Resources:
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: allower
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -61,7 +62,7 @@ Resources:
   MeaningFinderLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: MeaningFinder
+      FunctionName: thing-which-does-stuff
       Handler: dist/index.handler
       Role: !GetAtt LambdaRole.Arn
       Code:
