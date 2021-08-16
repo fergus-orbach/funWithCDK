@@ -1,32 +1,14 @@
-import { APIGatewayProxyHandler } from 'aws-lambda'
+import { SNSHandler } from 'aws-lambda'
 import { Translate, TranslateTextCommand } from '@aws-sdk/client-translate'
-
-const apiResponses = {
-  OK: (body: { [key: string]: any }) => {
-    return {
-      statusCode: 200,
-      body: JSON.stringify(body, null, 2),
-    };
-  },
-  BAD_REQUEST: (body: { [key: string]: any }) => {
-    return {
-      statusCode: 400,
-      body: JSON.stringify(body, null, 2),
-    };
-  },
-};
+import { SendMessageCommand, SQS } from '@aws-sdk/client-sqs'
 
 const getTargetLanguageCode = (mode: string | undefined) =>
   mode && mode === 'catalan' ? 'ca' : 'es'
 
-export const handler: APIGatewayProxyHandler = async (event) => {
-  const body = JSON.parse(event.body!)
+export const handler: SNSHandler = async (event) => {
+  const body = JSON.parse(event.Records[0].Sns.Message)
 
   const { text, mode } = body;
-
-  if(!text) {
-    return apiResponses.BAD_REQUEST({message: 'no text provided'})
-  }
 
   const client = new Translate({})
   const command = new TranslateTextCommand({
@@ -37,9 +19,17 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
   const translatedText = await client.send(command)
 
-  return apiResponses.OK({
-    sourceLanguage: translatedText.SourceLanguageCode,
-    targetLanguage: translatedText.TargetLanguageCode,
-    message: translatedText.TranslatedText
+  const sqsClient = new SQS({
+    region: 'eu-west-1',
   })
+
+  const sendMessageCommand = new SendMessageCommand({
+    MessageBody: JSON.stringify({
+      translatedText: translatedText.TranslatedText,
+      sourceLanguage: translatedText.SourceLanguageCode
+    }, null, 2),
+    QueueUrl: process.env.DESTROY_STACK_QUEUE_URL,
+  })
+
+  await sqsClient.send(sendMessageCommand)
 }

@@ -8,6 +8,20 @@ Parameters:
     Type: String
     Description: bucket key for lambda artifacts
 Resources:
+
+  InputTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: where-things-begin
+      Subscription:
+      - Endpoint: !GetAtt MeaningFinderLambda.Arn
+        Protocol: lambda
+
+  OutputQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: where-things-end-up
+
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -29,6 +43,18 @@ Resources:
                   - translate:*
                   - comprehend:*
                 Resource: '*'
+        - PolicyName: "post-to-queue"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - sqs:SendMessage
+                  - sqs:GetQueueUrl
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt OutputQueue.Arn
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 
@@ -36,10 +62,21 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: MeaningFinder
-      Handler: index.handler
+      Handler: dist/index.handler
       Role: !GetAtt LambdaRole.Arn
       Code:
         S3Bucket: !Ref ArtifactBucket
         S3Key: !Sub "${ArtifactBucketKey}/dist.zip"
       Runtime: nodejs14.x
       Timeout: 300
+      Environment:
+        Variables:
+          DESTROY_STACK_QUEUE_URL: !Ref OutputQueue
+
+  LambdaSubscriptionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt MeaningFinderLambda.Arn
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref InputTopic
