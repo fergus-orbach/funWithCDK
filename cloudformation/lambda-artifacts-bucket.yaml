@@ -10,6 +10,9 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref ArtifactBucketName
+      Tags:
+        - Key: Service
+          Value: FunWithCdk
 
   ArtifactsBucketPolicy:
     Type: AWS::S3::BucketPolicy

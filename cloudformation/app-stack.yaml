@@ -72,7 +72,7 @@ Resources:
       Timeout: 300
       Environment:
         Variables:
-          DESTROY_STACK_QUEUE_URL: !Ref OutputQueue
+          QUEUE_URL: !Ref OutputQueue
 
   LambdaSubscriptionPermission:
     Type: AWS::Lambda::Permission
