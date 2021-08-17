@@ -27,12 +27,12 @@ copy-lambda-code-to-bucket:
 
 deploy-lambda-code: deploy-artifacts-bucket bundle-lambda zip-lambda copy-lambda-code-to-bucket
 
-deploy-app-cloudformation: deploy-lambda-code
+deploy-app-cloudformation:
 	aws cloudformation deploy \
 		--template-file ./cloudformation/app-stack.yaml \
 		--stack-name meaning-finder-stack \
 		--region eu-west-1 \
-		--capabilities CAPABILITY_IAM \
+		--capabilities CAPABILITY_NAMED_IAM \
 		--parameter-overrides \
 			ArtifactBucket=$(ARTIFACT_BUCKET_NAME) \
 			ArtifactBucketKey=$(ARTIFACT_BUCKET_KEY)
