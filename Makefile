@@ -37,7 +37,9 @@ deploy-app-cloudformation:
 			ArtifactBucket=$(ARTIFACT_BUCKET_NAME) \
 			ArtifactBucketKey=$(ARTIFACT_BUCKET_KEY)
 
+bootstrap-cdk:
+	cd cdk && yarn && yarn cdk bootstrap
 
 deploy-app-cdk: bundle-lambda
-	cd cdk && cdk deploy CdkStack --require-approval never
+	cd cdk && yarn cdk deploy CdkStack --require-approval never
 
